@@ -24,10 +24,6 @@ Adafruit_LSM9DS0::Adafruit_LSM9DS0( int32_t sensorID ) {
   _lsm9dso_sensorid_mag = sensorID + 2;
   _lsm9dso_sensorid_gyro = sensorID + 3;
   _lsm9dso_sensorid_temp = sensorID + 4;
-  _accelSensor = Sensor(this, &Adafruit_LSM9DS0::readAccel, &Adafruit_LSM9DS0::getAccelEvent, &Adafruit_LSM9DS0::getAccelSensor);
-  _magSensor   = Sensor(this, &Adafruit_LSM9DS0::readMag,   &Adafruit_LSM9DS0::getMagEvent,   &Adafruit_LSM9DS0::getMagSensor);
-  _gyroSensor  = Sensor(this, &Adafruit_LSM9DS0::readGyro,  &Adafruit_LSM9DS0::getGyroEvent,  &Adafruit_LSM9DS0::getGyroSensor);
-  _tempSensor  = Sensor(this, &Adafruit_LSM9DS0::readTemp,  &Adafruit_LSM9DS0::getTempEvent,  &Adafruit_LSM9DS0::getTempSensor);
 }
 
 Adafruit_LSM9DS0::Adafruit_LSM9DS0(int8_t xmcs, int8_t gcs, int32_t sensorID ) {
@@ -40,10 +36,6 @@ Adafruit_LSM9DS0::Adafruit_LSM9DS0(int8_t xmcs, int8_t gcs, int32_t sensorID ) {
   _lsm9dso_sensorid_mag = sensorID + 2;
   _lsm9dso_sensorid_gyro = sensorID + 3;
   _lsm9dso_sensorid_temp = sensorID + 4;
-  _accelSensor = Sensor(this, &Adafruit_LSM9DS0::readAccel, &Adafruit_LSM9DS0::getAccelEvent, &Adafruit_LSM9DS0::getAccelSensor);
-  _magSensor   = Sensor(this, &Adafruit_LSM9DS0::readMag,   &Adafruit_LSM9DS0::getMagEvent,   &Adafruit_LSM9DS0::getMagSensor);
-  _gyroSensor  = Sensor(this, &Adafruit_LSM9DS0::readGyro,  &Adafruit_LSM9DS0::getGyroEvent,  &Adafruit_LSM9DS0::getGyroSensor);
-  _tempSensor  = Sensor(this, &Adafruit_LSM9DS0::readTemp,  &Adafruit_LSM9DS0::getTempEvent,  &Adafruit_LSM9DS0::getTempSensor);
 }
 
 Adafruit_LSM9DS0::Adafruit_LSM9DS0(int8_t clk, int8_t miso, int8_t mosi, int8_t xmcs, int8_t gcs, int32_t sensorID ) {
@@ -58,10 +50,6 @@ Adafruit_LSM9DS0::Adafruit_LSM9DS0(int8_t clk, int8_t miso, int8_t mosi, int8_t 
   _lsm9dso_sensorid_mag = sensorID + 2;
   _lsm9dso_sensorid_gyro = sensorID + 3;
   _lsm9dso_sensorid_temp = sensorID + 4;
-  _accelSensor = Sensor(this, &Adafruit_LSM9DS0::readAccel, &Adafruit_LSM9DS0::getAccelEvent, &Adafruit_LSM9DS0::getAccelSensor);
-  _magSensor   = Sensor(this, &Adafruit_LSM9DS0::readMag,   &Adafruit_LSM9DS0::getMagEvent,   &Adafruit_LSM9DS0::getMagSensor);
-  _gyroSensor  = Sensor(this, &Adafruit_LSM9DS0::readGyro,  &Adafruit_LSM9DS0::getGyroEvent,  &Adafruit_LSM9DS0::getGyroSensor);
-  _tempSensor  = Sensor(this, &Adafruit_LSM9DS0::readTemp,  &Adafruit_LSM9DS0::getTempEvent,  &Adafruit_LSM9DS0::getTempSensor);
 }
 
 bool Adafruit_LSM9DS0::begin()
@@ -300,48 +288,6 @@ void Adafruit_LSM9DS0::setupGyro ( lsm9ds0GyroScale_t scale )
 }
 
 /***************************************************************************
- UNIFIED SENSOR FUNCTIONS
- ***************************************************************************/
-
-/**************************************************************************/
-/*!
-    @brief  Gets the most recent accel sensor event
-*/
-/**************************************************************************/
-bool Adafruit_LSM9DS0::getEvent(sensors_event_t *accelEvent,
-                                sensors_event_t *magEvent,
-                                sensors_event_t *gyroEvent,
-                                sensors_event_t *tempEvent )
-{
-  /* Grab new sensor reading and timestamp. */
-  read();
-  uint32_t timestamp = millis();
-
-  /* Update appropriate sensor events. */
-  if (accelEvent) getAccelEvent(accelEvent, timestamp);
-  if (magEvent)   getMagEvent(magEvent, timestamp);
-  if (gyroEvent)  getGyroEvent(gyroEvent, timestamp);
-  if (tempEvent)  getTempEvent(tempEvent, timestamp);
-  
-  return true;
-}
-
-/**************************************************************************/
-/*!
-    @brief  Gets the sensor_t data
-*/
-/**************************************************************************/
-void Adafruit_LSM9DS0::getSensor(sensor_t *accel, sensor_t *mag,
-                                 sensor_t *gyro, sensor_t *temp )
-{
-  /* Update appropriate sensor metadata. */
-  if (accel) getAccelSensor(accel);
-  if (mag)   getMagSensor(mag);
-  if (gyro)  getGyroSensor(gyro);
-  if (temp)  getTempSensor(temp);
-}
-
-/***************************************************************************
  PRIVATE FUNCTIONS
  ***************************************************************************/
 void Adafruit_LSM9DS0::write8(boolean type, byte reg, byte value)
@@ -447,109 +393,4 @@ uint8_t Adafruit_LSM9DS0::spixfer(uint8_t data) {
     }
     return reply;
   }
-}
-
-void Adafruit_LSM9DS0::getAccelEvent(sensors_event_t* event, uint32_t timestamp) {
-  memset(event, 0, sizeof(sensors_event_t));
-  event->version   = sizeof(sensors_event_t);
-  event->sensor_id = _lsm9dso_sensorid_accel;
-  event->type      = SENSOR_TYPE_ACCELEROMETER;
-  event->timestamp = timestamp;
-  event->acceleration.x = accelData.x * _accel_mg_lsb;
-  event->acceleration.x /= 1000;
-  event->acceleration.x *= SENSORS_GRAVITY_STANDARD;
-  event->acceleration.y = accelData.y * _accel_mg_lsb;
-  event->acceleration.y /= 1000;
-  event->acceleration.y *= SENSORS_GRAVITY_STANDARD;
-  event->acceleration.z = accelData.z * _accel_mg_lsb;
-  event->acceleration.z /= 1000;
-  event->acceleration.z *= SENSORS_GRAVITY_STANDARD;
-}
-
-void Adafruit_LSM9DS0::getMagEvent(sensors_event_t* event, uint32_t timestamp) {
-  memset(event, 0, sizeof(sensors_event_t));
-  event->version   = sizeof(sensors_event_t);
-  event->sensor_id = _lsm9dso_sensorid_mag;
-  event->type      = SENSOR_TYPE_MAGNETIC_FIELD;
-  event->timestamp = timestamp;
-  event->magnetic.x = magData.x * _mag_mgauss_lsb;
-  event->magnetic.x /= 1000;
-  event->magnetic.y = magData.y * _mag_mgauss_lsb;
-  event->magnetic.y /= 1000;
-  event->magnetic.z = magData.z * _mag_mgauss_lsb;
-  event->magnetic.z /= 1000;
-}
-
-void Adafruit_LSM9DS0::getGyroEvent(sensors_event_t* event, uint32_t timestamp) {
-  memset(event, 0, sizeof(sensors_event_t));
-  event->version   = sizeof(sensors_event_t);
-  event->sensor_id = _lsm9dso_sensorid_accel;
-  event->type      = SENSOR_TYPE_GYROSCOPE;
-  event->timestamp = timestamp;
-  event->gyro.x = gyroData.x * _gyro_dps_digit;
-  event->gyro.y = gyroData.y * _gyro_dps_digit;
-  event->gyro.z = gyroData.z * _gyro_dps_digit;
-}
-
-void Adafruit_LSM9DS0::getTempEvent(sensors_event_t* event, uint32_t timestamp) {
-  memset(event, 0, sizeof(sensors_event_t));
-  event->version   = sizeof(sensors_event_t);
-  event->sensor_id = _lsm9dso_sensorid_temp;
-  event->type      = SENSOR_TYPE_AMBIENT_TEMPERATURE;
-  event->timestamp = timestamp;
-  // This is just a guess since the staring point (21C here) isn't documented :(
-  event->temperature = 21.0 + (float)temperature/8;
-  //event->temperature /= LSM9DS0_TEMP_LSB_DEGREE_CELSIUS;
-}
-
-void Adafruit_LSM9DS0::getAccelSensor(sensor_t* sensor) {
-  memset(sensor, 0, sizeof(sensor_t));
-  strncpy (sensor->name, "LSM9DS0_A", sizeof(sensor->name) - 1);
-  sensor->name[sizeof(sensor->name)- 1] = 0;
-  sensor->version     = 1;
-  sensor->sensor_id   = _lsm9dso_sensorid_accel;
-  sensor->type        = SENSOR_TYPE_ACCELEROMETER;
-  sensor->min_delay   = 0;
-  sensor->max_value   = 0.0;  // ToDo
-  sensor->min_value   = 0.0;  // ToDo
-  sensor->resolution  = 0.0;  // ToDo
-}
-
-void Adafruit_LSM9DS0::getMagSensor(sensor_t* sensor) {
-  memset(sensor, 0, sizeof(sensor_t));
-  strncpy (sensor->name, "LSM9DS0_M", sizeof(sensor->name) - 1);
-  sensor->name[sizeof(sensor->name)- 1] = 0;
-  sensor->version     = 1;
-  sensor->sensor_id   = _lsm9dso_sensorid_mag;
-  sensor->type        = SENSOR_TYPE_MAGNETIC_FIELD;
-  sensor->min_delay   = 0;
-  sensor->max_value   = 0.0;  // ToDo
-  sensor->min_value   = 0.0;  // ToDo
-  sensor->resolution  = 0.0;  // ToDo
-}
-
-void Adafruit_LSM9DS0::getGyroSensor(sensor_t* sensor) {
-  memset(sensor, 0, sizeof(sensor_t));
-  strncpy (sensor->name, "LSM9DS0_G", sizeof(sensor->name) - 1);
-  sensor->name[sizeof(sensor->name)- 1] = 0;
-  sensor->version     = 1;
-  sensor->sensor_id   = _lsm9dso_sensorid_gyro;
-  sensor->type        = SENSOR_TYPE_GYROSCOPE;
-  sensor->min_delay   = 0;
-  sensor->max_value   = 0.0;  // ToDo
-  sensor->min_value   = 0.0;  // ToDo
-  sensor->resolution  = 0.0;  // ToDo
-}
-
-void Adafruit_LSM9DS0::getTempSensor(sensor_t* sensor) {
-  memset(sensor, 0, sizeof(sensor_t));
-  strncpy (sensor->name, "LSM9DS0_T", sizeof(sensor->name) - 1);
-  sensor->name[sizeof(sensor->name)- 1] = 0;
-  sensor->version     = 1;
-  sensor->sensor_id   = _lsm9dso_sensorid_temp;
-  sensor->type        = SENSOR_TYPE_AMBIENT_TEMPERATURE;
-  sensor->min_delay   = 0;
-  sensor->max_value   = 0.0;  // ToDo
-  sensor->min_value   = 0.0;  // ToDo
-  sensor->resolution  = 0.0;  // ToDo
 }
